@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STYLIO — AI 코디 어시스턴트</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f2ed;--bg2:#ece8e1;--card:#fff;--card2:#f9f7f4;--ink:#1c1a17;--ink2:#4a4640;--muted:#9c9590;--border:#e0dbd3;--gold:#b8892a;--gold2:#d4a843;--gf:rgba(184,137,42,.10);--sh:0 2px 20px rgba(28,26,23,.07);--shl:0 8px 40px rgba(28,26,23,.13);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',sans-serif;font-size:14px;min-height:100vh;}
+input,select,textarea{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--ink);padding:9px 13px;border-radius:9px;font-family:'Noto Sans KR',sans-serif;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,137,42,.1);}
+.lbl{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:500;}
+.frow{margin-bottom:12px;}
+.finline{display:flex;gap:10px;flex-wrap:wrap;}.finline>*{flex:1;min-width:90px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:9px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:500;transition:all .2s;font-size:13px;}
+.btn-g{background:var(--gold);color:#fff;padding:9px 18px;}.btn-g:hover{background:var(--gold2);}
+.btn-gh{background:none;border:1px solid var(--border);color:var(--ink2);padding:8px 15px;}.btn-gh:hover{border-color:var(--gold);color:var(--gold);}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:7px;}
+.spin{width:16px;height:16px;border:2px solid rgba(0,0,0,.12);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;}
+.big-spin{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.page{display:none;animation:fadeUp .3s ease;}.page.on{display:block;}
+nav{background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:500;box-shadow:var(--sh);}
+.nav-in{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;}
+.logo{font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;color:var(--gold);letter-spacing:2px;}
+.logo span{font-size:11px;color:var(--muted);font-family:'Noto Sans KR',sans-serif;font-weight:300;margin-left:8px;}
+.tab{background:none;border:none;color:var(--muted);font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:7px 15px;border-radius:8px;cursor:pointer;transition:all .2s;}
+.tab:hover{color:var(--ink);background:var(--bg2);}.tab.on{background:var(--ink);color:#fff;}
+main{max-width:1100px;margin:0 auto;padding:26px 24px;}
+/* 날씨 배너 */
+.w-banner{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:13px 18px;margin-bottom:16px;box-shadow:var(--sh);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+/* 3단 그리드 */
+.today-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px;}
+.w-card{background:linear-gradient(150deg,#1a3a5c,#2a5a7a);border-radius:16px;padding:20px;color:#fff;box-shadow:var(--sh);}
+.a-card{border-radius:16px;padding:20px;color:#fff;box-hadow:var(--sh);}
+.ts-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--sh);overflow-y:auto;max-height:220px;}
+/* 코디 카드 */
+.outfit-card{background:var(--card);border:1px solid var(--border);border-radius:15px;overflow:hidden;box-shadow:var(--sh);margin-bottom:14px;}
+.outfit-body{display:grid;grid-template-columns:220px 1fr 200px;}
+.outfit-col{padding:16px 18px;}
+.outfit-col+.outfit-col{border-left:1px solid var(--border);}
+/* 옷장 */
+.ctoolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+.flt{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:18px;cursor:pointer;font-size:12px;font-family:'Noto Sans KR',sans-serif;transition:all .2s;}
+.flt.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:13px;}
+.ccard{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative;transition:all .2s;}
+.ccard:hover{transform:translateY(-3px);box-shadow:var(--shl);border-color:var(--gold);}
+.cthumb{aspect-ratio:3/4;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:40px;overflow:hidden;}
+.cthumb img{width:100%;height:100%;object-fit:cover;}
+.cseason{position:absolute;top:6px;left:6px;background:rgba(255,255,255,.9);border-radius:5px;padding:2px 5px;font-size:10px;font-weight:500;}
+.cdel{position:absolute;top:6px;right:6px;background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:50%;width:24px;height:24px;display:none;align-items:center;justify-content:center;cursor:pointer;color:#c05040;font-size:12px;}
+.ccard:hover .cdel{display:flex;}
+/* 달력 */
+.cal-grid-wrap{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:16px;}
+.cal-dow{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:500;}
+.cal-day{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;position:relative;border:1px solid transparent;transition:all .15s;}
+.cal-day:hover{background:var(--bg2);}.cal-day.today{background:var(--gold);color:#fff;font-weight:700;}
+.cal-day.selected:not(.today){border-color:var(--gold);background:var(--gf);}
+.cal-day.has-ev::after{content:'';width:4px;height:4px;border-radius:50%;background:var(--gold);position:absolute;bottom:2px;}
+.cal-day.today.has-ev::after{background:#fff;}.cal-day.other-m{color:var(--border);cursor:default;pointer-events:none;}
+/* 프로필 */
+.playout{display:grid;grid-template-columns:250px 1fr;gap:22px;align-items:start;}
+.photo-zone{aspect-ratio:3/4;border:2px dashed var(--border);border-radius:14px;overflow:hidden;position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--card);transition:border-color .2s;}
+.photo-zone:hover{border-color:var(--gold);}
+.photo-zone img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.sec-head{font-family:'Noto Serif KR',serif;font-size:14px;font-weight:700;color:var(--gold);margin-bottom:13px;padding-bottom:9px;border-bottom:1px solid var(--border);}
+/* 설정 카드 */
+.api-card{background:linear-gradient(135deg,#1c1a17,#2a2620);border-radius:16px;padding:28px;color:#fff;margin-bottom:20px;}
+.api-status{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-top:8px;}
+.api-status.ok{background:rgba(42,106,66,.4);color:#7ada9a;}
+.api-status.no{background:rgba(180,60,40,.3);color:#f09080;}
+/* 오버레이/모달 */
+.overlay{position:fixed;inset:0;background:rgba(28,26,23,.55);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.overlay.on{display:flex;}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shl);}
+.mact{display:flex;gap:9px;justify-content:flex-end;margin-top:16px;}
+/* 토스트 */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--ink);color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;z-index:9999;opacity:0;transform:translateY(6px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.empty{text-align:center;padding:36px 16px;color:var(--muted);}
+.ph{font-family:'Noto Serif KR',serif;font-size:25px;font-weight:700;margin-bottom:4px;}
+.ps{color:var(--muted);font-size:13px;margin-bottom:22px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:var(--sh);}
+.sbadge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500;white-space:nowrap;margin-top:3px;display:inline-block;}
+.add-ev-form{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:12px;}
+/* API 키 없을 때 잠금 오버레이 */
+.lock-banner{background:var(--card);border:1px solid #f0c060;border-radius:13px;padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;gap:14px;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <div class="logo">STYLIO <span>AI 코디 어시스턴트</span></div>
+    <div style="display:flex;gap:2px;">
+      <button class="tab on" onclick="showPage('today',this)">🌤️ 오늘코디</button>
+      <button class="tab" onclick="showPage('clothes',this)">👗 옷장</button>
+      <button class="tab" onclick="showPage('schedule',this)">📅 일정</button>
+      <button class="tab" onclick="showPage('profile',this)">👤 프로필</button>
+      <button class="tab" onclick="showPage('settings',this)">⚙️ 설정</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<!-- ── 오늘코디 ── -->
+<div class="page on" id="page-today">
+  <div id="pminiWrap" style="display:none;align-items:center;gap:10px;margin-bottom:16px;">
+    <div id="pminiImg" style="width:46px;height:46px;border-radius:50%;overflow:hidden;border:2px solid var(--gold);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">👤</div>
+    <div><div id="pminiName" style="font-family:'Noto Serif KR',serif;font-size:15px;font-weight:700;"></div><div id="pminiSub" style="font-size:11px;color:var(--muted);"></div></div>
+  </div>
+
+  <div class="w-banner">
+    <div>
+      <div style="font-size:13px;font-weight:500;">📍 <span id="bannerCity">서울</span></div>
+      <div id="bannerStatus" style="font-size:11px;color:var(--muted);margin-top:2px;">Claude AI 자동 조회</div>
+    </div>
+    <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;">
+      <input type="text" id="cityInput" placeholder="도시 입력 (예: 부산, 제주)" style="width:170px;padding:7px 11px;font-size:12px;" onkeydown="if(event.key==='Enter')fetchByCity()">
+      <button class="btn btn-g btn-sm" onclick="fetchByCity()">🔍 조회</button>
+      <button class="btn btn-gh btn-sm" id="refreshBtn" onclick="refreshWeather()">🔄 새로고침</button>
+    </div>
+  </div>
+
+  <div class="today-grid">
+    <div class="w-card">
+      <div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">오늘의 날씨</div>
+      <div id="wIcon" style="font-size:28px;margin-bottom:3px;">⏳</div>
+      <div style="font-family:'Noto Serif KR',serif;font-size:42px;font-weight:700;line-height:1;"><span id="wTemp">--</span><span style="font-size:16px;font-weight:300;">°C</span></div>
+      <div id="wCity" style="font-size:12px;opacity:.7;margin:4px 0 10px;">--</div>
+      <div style="display:flex;gap:10px;font-size:11px;opacity:.8;flex-wrap:wrap;">
+        <span>🤔 체감 <b id="wFeels">--</b>°</span>
+        <span>💧 <b id="wHumid">--</b>%</span>
+        <span>💨 <b id="wWind">--</b>m/s</span>
+        <span>☔ <b id="wRain">--</b>%</span>
+      </div>
+    </div>
+    <div class="a-card" id="aCard" style="background:linear-gradient(150deg,#2e2c2a,#3e3a36);">
+      <div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">대기질 현황</div>
+      <div id="aIcon" style="font-size:28px;margin-bottom:3px;">⏳</div>
+      <div id="aGrade" style="font-family:'Noto Serif KR',serif;font-size:22px;font-weight:700;color:#fff;">불러오는 중</div>
+      <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;">
+        <div style="background:rgba(255,255,255,.14);border-radius:7px;padding:5px 9px;font-size:11px;line-height:1.4;color:#fff;">미세먼지(PM10)<div id="pm10V" style="font-size:13px;font-weight:700;margin-top:2px;">--</div></div>
+        <div style="background:rgba(255,255,255,.14);border-radius:7px;padding:5px 9px;font-size:11px;line-height:1.4;color:#fff;">초미세먼지(PM2.5)<div id="pm25V" style="font-size:13px;font-weight:700;margin-top:2px;">--</div></div>
+        <div style="background:rgba(255,255,255,.14);border-radius:7px;padding:5px 9px;font-size:11px;line-height:1.4;color:#fff;">오존(O₃)<div id="ozoneV" style="font-size:13px;font-weight:700;margin-top:2px;">--</div></div>
+      </div>
+    </div>
+    <div class="ts-card">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">오늘의 일정</div>
+      <div id="todaySched"></div>
+    </div>
+  </div>
+
+  <button id="codyBtn" onclick="getAICody()" style="width:100%;padding:15px;font-size:16px;border-radius:13px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;border:none;cursor:pointer;font-family:'Noto Serif KR',serif;letter-spacing:1px;box-shadow:0 4px 18px rgba(184,137,42,.28);display:flex;align-items:center;justify-content:center;gap:8px;">
+    ✨ AI 코디 추천 받기 (3가지 스타일)
+  </button>
+  <div id="codyLoading" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px;text-align:center;margin-top:18px;">
+    <div class="big-spin"></div>
+    <div style="color:var(--muted);font-size:13px;">AI가 오늘의 코디 3가지를 분석 중입니다…</div>
+  </div>
+  <div id="codyResult" style="display:none;margin-top:18px;">
+    <div style="font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;color:var(--gold);margin-bottom:4px;">✨ 오늘의 추천 코디 3선</div>
+    <div id="codySubtitle" style="font-size:12px;color:var(--muted);margin-bottom:14px;"></div>
+    <div id="outfitList"></div>
+  </div>
+</div>
+
+<!-- ── 옷장 ── -->
+<div class="page" id="page-clothes">
+  <div class="ph">내 옷장</div>
+  <p class="ps">보유한 옷을 등록하면 AI 코디 추천에 활용됩니다.</p>
+  <div class="ctoolbar">
+    <button class="flt on" onclick="filterC('전체',this)">전체</button>
+    <button class="flt" onclick="filterC('상의',this)">👕 상의</button>
+    <button class="flt" onclick="filterC('하의',this)">👖 하의</button>
+    <button class="flt" onclick="filterC('아우터',this)">🧥 아우터</button>
+    <button class="flt" onclick="filterC('원피스/세트',this)">👗 원피스/세트</button>
+    <button class="flt" onclick="filterC('신발',this)">👟 신발</button>
+    <button class="flt" onclick="filterC('가방',this)">👜 가방</button>
+    <button class="flt" onclick="filterC('액세서리',this)">💍 액세서리</button>
+    <div style="display:flex;gap:7px;margin-left:auto;">
+      <button class="btn btn-gh btn-sm" onclick="openMultiModal()">📦 여러 장 추가</button>
+      <button class="btn btn-gh btn-sm" onclick="openFitModal()">👗 가상 착용</button>
+      <button class="btn btn-g btn-sm" onclick="openCModal()">+ 옷 추가</button>
+    </div>
+  </div>
+  <div class="cgrid" id="clothesGrid"></div>
+</div>
+
+<!-- ── 일정 ── -->
+<div class="page" id="page-schedule">
+  <div class="ph">일정 관리</div>
+  <p class="ps">날짜를 클릭해 일정을 추가하세요. AI가 TPO에 맞게 코디합니다.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <button class="btn btn-gh btn-sm" onclick="moveMonth(-1)">◀</button>
+        <div id="calTitle" style="font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;flex:1;text-align:center;"></div>
+        <button class="btn btn-gh btn-sm" onclick="moveMonth(1)">▶</button>
+      </div>
+      <div class="cal-grid-wrap" id="calGrid">
+        <div class="cal-dow" style="color:#c05040;">일</div><div class="cal-dow">월</div><div class="cal-dow">화</div>
+        <div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div>
+        <div class="cal-dow" style="color:#2a5a9a;">토</div>
+      </div>
+    </div>
+    <div class="card">
+      <div id="evDateTitle" style="font-family:'Noto Serif KR',serif;font-size:15px;font-weight:700;margin-bottom:12px;">날짜를 선택하세요</div>
+      <div id="evList"><div class="empty" style="padding:12px 0;"><div style="font-size:26px;">📅</div><p style="font-size:12px;">날짜를 클릭해<br>일정을 추가하세요</p></div></div>
+      <div class="add-ev-form" id="addEvForm" style="display:none;">
+        <div style="font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:10px;">+ 일정 추가</div>
+        <div class="frow"><label class="lbl">일정 이름</label><input type="text" id="evName" placeholder="예: 팀장님과 점심 미팅"></div>
+        <div class="finline" style="margin-bottom:10px;">
+          <div><label class="lbl">시작</label><input type="time" id="evStart"></div>
+          <div><label class="lbl">종료</label><input type="time" id="evEnd"></div>
+        </div>
+        <div class="frow"><label class="lbl">TPO / 분위기</label>
+          <select id="evType">
+            <option value="일상">🏠 일상</option><option value="비즈니스">💼 비즈니스</option>
+            <option value="데이트">💕 데이트</option><option value="파티">🎉 파티</option>
+            <option value="야외">🌿 야외활동</option><option value="운동">💪 운동</option>
+            <option value="캐주얼">👟 캐주얼</option><option value="공식행사">🎖️ 공식행사</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn btn-gh btn-sm" onclick="cancelEv()">취소</button>
+          <button class="btn btn-g btn-sm" onclick="saveEvent()">저장</button>
+        </div>
+      </div>
+      <button class="btn btn-gh btn-sm" id="showEvBtn" style="width:100%;margin-top:10px;display:none;" onclick="showEvFormFn()">+ 이 날 일정 추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 프로필 ── -->
+<div class="page" id="page-profile">
+  <div class="ph">내 프로필</div>
+  <p class="ps">나를 더 잘 알수록 AI 코디 추천이 정확해집니다.</p>
+  <div class="playout">
+    <div>
+      <div class="photo-zone" onclick="document.getElementById('profileInput').click()">
+        <div id="photoHint" style="text-align:center;color:var(--muted);font-size:13px;line-height:1.8;z-index:1;"><div style="font-size:36px;margin-bottom:6px;">📸</div>전신 사진 업로드<br><span style="font-size:11px;">클릭하여 선택</span></div>
+        <img id="profileImg" src="" style="display:none;">
+      </div>
+      <input type="file" id="profileInput" accept="image/*" style="display:none;" onchange="loadPhoto(this)">
+    </div>
+    <div class="card">
+      <div class="sec-head">기본 정보</div>
+      <div class="frow"><label class="lbl">이름</label><input type="text" id="pName" oninput="saveProfile()" placeholder="이름 입력"></div>
+      <div class="finline">
+        <div class="frow" style="margin:0;"><label class="lbl">성별</label><select id="pGender" onchange="saveProfile()"><option value="">선택</option><option>여성</option><option>남성</option></select></div>
+        <div class="frow" style="margin:0;"><label class="lbl">나이</label><input type="number" id="pAge" oninput="saveProfile()" placeholder="28"></div>
+      </div>
+      <div class="finline" style="margin-top:10px;">
+        <div class="frow" style="margin:0;"><label class="lbl">키(cm)</label><input type="number" id="pHeight" oninput="saveProfile()" placeholder="165"></div>
+        <div class="frow" style="margin:0;"><label class="lbl">체중(kg)</label><input type="number" id="pWeight" oninput="saveProfile()" placeholder="55"></div>
+      </div>
+      <div class="sec-head" style="margin-top:18px;">스타일 취향</div>
+      <div class="frow"><label class="lbl">선호 스타일</label>
+        <select id="pStyle" onchange="saveProfile()"><option value="">선택</option>
+          <option>미니멀/심플</option><option>캐주얼</option><option>오피스/비즈니스</option><option>스트릿/힙</option>
+          <option>페미닌/러블리</option><option>스포티</option><option>빈티지/레트로</option><option>럭셔리/포멀</option>
+        </select></div>
+      <div class="frow"><label class="lbl">색상 선호도</label>
+        <select id="pColor" onchange="saveProfile()"><option value="">선택</option>
+          <option>블랙/화이트/모노톤</option><option>베이지/크림/아이보리</option><option>파스텔톤</option>
+          <option>밝고 화사한 컬러</option><option>어스톤/브라운</option><option>네이비/카키</option><option>다양하게</option>
+        </select></div>
+      <div class="frow"><label class="lbl">직업/라이프스타일</label>
+        <select id="pJob" onchange="saveProfile()"><option value="">선택</option>
+          <option>사무직/직장인</option><option>학생</option><option>프리랜서/재택근무</option>
+          <option>서비스직</option><option>창작/예술계</option><option>주부</option><option>기타</option>
+        </select></div>
+      <div class="frow"><label class="lbl">특이사항</label>
+        <textarea id="pNote" rows="2" oninput="saveProfile()" placeholder="예: 추위를 많이 탐 / 레이어드 선호"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 설정 ── -->
+<div class="page" id="page-settings">
+  <div class="ph">설정</div>
+  <p class="ps">Claude API 키와 앱 환경을 설정합니다.</p>
+
+  <div class="api-card">
+    <div style="font-family:'Noto Serif KR',serif;font-size:18px;font-weight:700;margin-bottom:4px;">🔑 Claude API 키</div>
+    <div style="font-size:12px;opacity:.6;margin-bottom:16px;">날씨 조회 · AI 코디 추천 · 옷 자동 분류에 사용됩니다</div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-…" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:9px;padding:10px 14px;font-size:13px;flex:1;">
+      <button onclick="saveApiKey()" style="background:var(--gold);color:#fff;border:none;border-radius:9px;padding:10px 20px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;white-space:nowrap;">저장</button>
+    </div>
+    <div id="apiStatus" class="api-status no" style="margin-top:10px;">⚠️ API 키 미설정</div>
+    <div style="margin-top:16px;font-size:12px;opacity:.5;line-height:1.8;">
+      • Calorie Tracker 등 다른 앱에서 발급한 키 그대로 사용 가능합니다<br>
+      • API 키는 이 기기의 브라우저에만 저장되며 외부로 전송되지 않습니다<br>
+      • 발급: <a href="https://console.anthropic.com" target="_blank" style="color:var(--gold2);">console.anthropic.com</a>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="sec-head">기본 도시</div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <input type="text" id="defaultCityInput" placeholder="예: 서울" style="max-width:200px;">
+      <button onclick="saveDefaultCity()" class="btn btn-g btn-sm">저장</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px;">앱 시작 시 자동으로 이 도시의 날씨를 조회합니다.</div>
+  </div>
+
+  <div class="card">
+    <div class="sec-head">데이터 관리</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button onclick="clearClothes()" class="btn btn-gh btn-sm">👗 옷장 초기화</button>
+      <button onclick="clearEvents()" class="btn btn-gh btn-sm">📅 일정 초기화</button>
+      <button onclick="clearAll()" class="btn btn-gh btn-sm" style="color:#c05040;border-color:#c05040;">🗑️ 전체 초기화</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- 옷 추가 모달 -->
+<div class="overlay" id="clothOverlay">
+  <div class="modal">
+    <div style="font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;margin-bottom:16px;">옷 추가</div>
+    <div id="clothImgZone" onclick="document.getElementById('clothImgInput').click()"
+      style="aspect-ratio:4/3;border:2px dashed var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:var(--bg2);margin-bottom:12px;flex-direction:column;gap:6px;color:var(--muted);font-size:13px;"
+      onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+      <span style="font-size:32px;">📷</span><span>사진을 클릭하여 업로드</span>
+      <span style="font-size:11px;">업로드 후 AI가 자동으로 분류해드립니다</span>
+    </div>
+    <input type="file" id="clothImgInput" accept="image/*" style="display:none;" onchange="handleClothImg(this)">
+    <div id="aiAnalyzeMsg" style="display:none;text-align:center;padding:10px;margin-bottom:10px;background:var(--gf);border-radius:9px;font-size:13px;color:var(--gold);">
+      <span class="spin" style="width:14px;height:14px;margin-right:6px;"></span>AI가 옷을 분석 중입니다…
+    </div>
+    <div class="frow"><label class="lbl">옷 이름 *</label><input type="text" id="cName" placeholder="예: 베이지 오버핏 코트"></div>
+    <div class="finline">
+      <div class="frow" style="margin:0;"><label class="lbl">카테고리</label>
+        <select id="cCat"><option>상의</option><option>하의</option><option>아우터</option><option>원피스/세트</option><option>신발</option><option>가방</option><option>액세서리</option></select></div>
+      <div class="frow" style="margin:0;"><label class="lbl">색상</label><input type="text" id="cColor" placeholder="예: 베이지"></div>
+    </div>
+    <div class="finline" style="margin-top:10px;">
+      <div class="frow" style="margin:0;"><label class="lbl">계절</label>
+        <select id="cSeason"><option>봄/가을</option><option>여름</option><option>겨울</option><option>사계절</option></select></div>
+      <div class="frow" style="margin:0;"><label class="lbl">스타일 태그</label><input type="text" id="cTag" placeholder="예: 캐주얼, 미팅용"></div>
+    </div>
+    <div class="mact">
+      <button class="btn btn-gh" onclick="closeCModal()">취소</button>
+      <button class="btn btn-g" onclick="saveCloth()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 여러 장 추가 모달 -->
+<div class="overlay" id="multiOverlay">
+  <div class="modal" style="width:560px;">
+    <div style="font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;margin-bottom:16px;">📦 여러 옷 한번에 추가</div>
+    <label style="display:block;border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;background:var(--bg2);margin-bottom:16px;"
+      onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:40px;margin-bottom:8px;">🗂️</div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:4px;">사진을 클릭해서 선택</div>
+      <div style="font-size:12px;color:var(--muted);">여러 장 동시 선택 · AI가 자동 분류합니다</div>
+      <input type="file" id="multiImgInput" accept="image/*" multiple style="display:none;" onchange="handleMultiFiles(this.files)">
+    </label>
+    <div id="multiProgress" style="display:none;text-align:center;padding:10px;color:var(--gold);font-size:13px;margin-bottom:10px;"></div>
+    <div id="multiPreviewGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;max-height:340px;overflow-y:auto;margin-bottom:16px;"></div>
+    <div class="mact">
+      <button class="btn btn-gh" onclick="closeMultiModal()">닫기</button>
+      <button class="btn btn-g" id="multiSaveBtn" style="display:none;" onclick="saveAllMulti()">✔ 전체 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 가상 착용 모달 -->
+<div class="overlay" id="fitOverlay">
+  <div class="modal" style="width:540px;">
+    <div style="font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;margin-bottom:16px;">👗 가상 착용 시뮬레이션</div>
+    <div style="background:var(--bg2);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--ink2);line-height:1.7;">
+      <b>Fashn.ai API</b>를 별도로 사용합니다. <a href="https://fashn.ai" target="_blank" style="color:var(--gold);">fashn.ai</a>에서 가입 후 API 키를 발급받으세요.
+    </div>
+    <div class="frow"><label class="lbl">Fashn.ai API 키</label><input type="password" id="fashnKey" placeholder="fa-xxxxxxxxxxxxxxxx" oninput="localStorage.setItem('fashn_key',this.value)"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div>
+        <label class="lbl">내 전신 사진</label>
+        <div id="fitModelZone" onclick="document.getElementById('fitModelInput').click()"
+          style="aspect-ratio:3/4;border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:var(--bg2);font-size:13px;color:var(--muted);flex-direction:column;gap:4px;">
+          <span style="font-size:28px;">🧍</span><span>전신 사진</span>
+        </div>
+        <input type="file" id="fitModelInput" accept="image/*" style="display:none;" onchange="loadFitImg('model',this)">
+      </div>
+      <div>
+        <label class="lbl">입혀볼 옷 사진</label>
+        <div id="fitGarmentZone" onclick="document.getElementById('fitGarmentInput').click()"
+          style="aspect-ratio:3/4;border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:var(--bg2);font-size:13px;color:var(--muted);flex-direction:column;gap:4px;">
+          <span style="font-size:28px;">👕</span><span>옷 사진</span>
+        </div>
+        <input type="file" id="fitGarmentInput" accept="image/*" style="display:none;" onchange="loadFitImg('garment',this)">
+      </div>
+    </div>
+    <div id="fitLoading" style="display:none;text-align:center;padding:16px;color:var(--gold);font-size:13px;"><span class="spin" style="width:20px;height:20px;margin-right:8px;"></span>가상 착용 생성 중… (최대 60초)</div>
+    <div id="fitResultWrap" style="display:none;margin-bottom:14px;"><label class="lbl">결과</label><img id="fitResultImg" src="" style="width:100%;border-radius:10px;"></div>
+    <div id="fitError" style="color:#c05040;font-size:13px;margin-bottom:14px;display:none;"></div>
+    <div class="mact">
+      <button class="btn btn-gh" onclick="closeFitModal()">닫기</button>
+      <button class="btn btn-g" onclick="runFitting()">👗 착용해보기</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── 상수 ──
+const TPO_EMOJI={비즈니스:'💼',데이트:'💕',파티:'🎉',야외:'🌿',운동:'💪',캐주얼:'👟',공식행사:'🎖️',일상:'🏠'};
+const TPO_BADGE={비즈니스:'#1a4a7a',데이트:'#7a1a5a',파티:'#7a4a1a',야외:'#1a5a2a',운동:'#3a5a1a',캐주얼:'#5a4a1a',공식행사:'#3a1a7a',일상:'#4a4a4a'};
+const CAT_EMOJI={'상의':'👕','하의':'👖','아우터':'🧥','원피스/세트':'👗','신발':'👟','가방':'👜','액세서리':'💍'};
+const AC=['#b8892a','#2a6a8a','#4a7a5a'];
+const today=new Date();
+const todayStr=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+// ── 상태 ──
+let clothes=JSON.parse(localStorage.getItem('sty_c')||'[]');
+let events=JSON.parse(localStorage.getItem('sty_e')||'{}');
+let profile=JSON.parse(localStorage.getItem('sty_p')||'{}');
+let weatherData={};
+let clothImgB64=null;
+let fitModelB64=null, fitGarmentB64=null;
+let multiItems=[];
+let calYear=today.getFullYear(), calMonth=today.getMonth(), selDate=null;
+
+// ── API 키 ──
+function getApiKey(){ return localStorage.getItem('sty_apikey')||''; }
+
+function saveApiKey(){
+  const key=document.getElementById('apiKeyInput').value.trim();
+  if(!key){showToast('API 키를 입력해주세요');return;}
+  localStorage.setItem('sty_apikey',key);
+  updateApiStatus();
+  showToast('✔ API 키가 저장됐습니다');
+}
+
+function updateApiStatus(){
+  const key=getApiKey();
+  const el=document.getElementById('apiStatus');
+  const inp=document.getElementById('apiKeyInput');
+  if(key){
+    el.className='api-status ok'; el.textContent='✅ API 키 설정됨 ('+key.slice(0,12)+'…)';
+    inp.value=key;
+  } else {
+    el.className='api-status no'; el.textContent='⚠️ API 키 미설정';
+  }
+}
+
+// ── Claude API 호출 ──
+async function callClaude({messages, tools, maxTokens=1000}){
+  const key=getApiKey();
+  if(!key) throw new Error('API 키가 없습니다. ⚙️ 설정 탭에서 API 키를 입력해주세요.');
+  const body={model:'claude-sonnet-4-5-20251001', max_tokens:maxTokens, messages};
+  if(tools) body.tools=tools;
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify(body)
+  });
+  const data=await res.json();
+  if(data.error) throw new Error(data.error.message||'API 오류');
+  return data;
+}
+
+// ── 대기질 등급 ──
+function airInfo(pm10,pm25){
+  const p10=Number(pm10)||0,p25=Number(pm25)||0;
+  if(!pm10&&!pm25) return{label:'정보없음',icon:'😐',grad:'linear-gradient(150deg,#2e2c2a,#3e3a36)'};
+  if(p25<=15&&p10<=30) return{label:'좋음',icon:'😊',grad:'linear-gradient(150deg,#1a4a2e,#2a6a42)'};
+  if(p25<=35&&p10<=80) return{label:'보통',icon:'😌',grad:'linear-gradient(150deg,#3d4a1a,#556a2a)'};
+  if(p25<=75&&p10<=150) return{label:'나쁨',icon:'😷',grad:'linear-gradient(150deg,#4a2e1a,#7a4a22)'};
+  return{label:'매우나쁨',icon:'🤢',grad:'linear-gradient(150deg,#4a1a1a,#7a2020)'};
+}
+function wIcon(cond=''){if(cond.match(/맑/))return'☀️';if(cond.match(/비/))return'🌧️';if(cond.match(/눈/))return'❄️';if(cond.match(/흐|구름/))return'⛅';return'🌡️';}
+
+// ── 유틸 ──
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('page-'+id).classList.add('on');
+  btn.classList.add('on');
+  if(id==='today') refreshToday();
+  if(id==='schedule'){if(!calYear)calYear=today.getFullYear();if(calMonth===undefined)calMonth=today.getMonth();renderCal();renderEvList(selDate);}
+  if(id==='profile') loadProfileForm();
+  if(id==='settings'){updateApiStatus();const dc=localStorage.getItem('sty_city')||'서울';document.getElementById('defaultCityInput').value=dc;}
+}
+
+// ── 날씨 ──
+async function fetchWeather(city){
+  const rb=document.getElementById('refreshBtn');
+  rb.innerHTML='<span class="spin" style="width:12px;height:12px;border-width:2px;"></span> 조회 중';
+  rb.disabled=true;
+  document.getElementById('bannerStatus').textContent=`${city} 날씨 조회 중…`;
+  try{
+    const data=await callClaude({
+      maxTokens:600,
+      tools:[{type:'web_search_20250305',name:'web_search'}],
+      messages:[{role:'user',content:`지금 ${city}의 현재 날씨와 대기질(미세먼지)을 검색해서 아래 JSON 형식으로만 답해주세요. 다른 텍스트 없이 JSON만 출력하세요.\n{"city":"도시명(한국어)","temp":기온숫자,"feels":체감온도숫자,"cond":"날씨상태한국어(맑음/흐림/비/눈 등)","humid":습도숫자,"wind":풍속숫자(m/s),"rain":강수확률(0-100),"pm10":PM10숫자,"pm25":PM2.5숫자,"ozone":오존숫자}\n숫자만, 모르면 null`}]
+    });
+    const txt=(data.content||[]).map(b=>b.type==='text'?b.text:'').join('');
+    const m=txt.match(/\{[\s\S]*?\}/);
+    if(!m) throw new Error('날씨 파싱 실패');
+    const w=JSON.parse(m[0]);
+    weatherData={
+      temp:w.temp!=null?Math.round(w.temp):null, feels:w.feels!=null?Math.round(w.feels):null,
+      cond:w.cond||'맑음', city:w.city||city,
+      humid:w.humid!=null?Math.round(w.humid):null, wind:w.wind!=null?Math.round(w.wind*10)/10:null,
+      rain:w.rain!=null?Math.round(w.rain):null,
+      pm10:w.pm10!=null?Math.round(w.pm10):null, pm25:w.pm25!=null?Math.round(w.pm25):null, ozone:w.ozone
+    };
+    localStorage.setItem('sty_city',weatherData.city);
+    renderWeather();
+    const now=new Date();
+    document.getElementById('bannerStatus').textContent=`Claude AI · ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} 업데이트`;
+  }catch(e){
+    document.getElementById('bannerStatus').textContent='❌ '+e.message;
+    showToast('날씨 조회 실패: '+e.message);
+  }
+  rb.innerHTML='🔄 새로고침'; rb.disabled=false;
+}
+
+function renderWeather(){
+  const w=weatherData;
+  document.getElementById('wIcon').textContent=wIcon(w.cond);
+  document.getElementById('wTemp').textContent=w.temp??'--';
+  document.getElementById('wCity').textContent=(w.city||'--')+' · '+(w.cond||'--');
+  document.getElementById('wFeels').textContent=w.feels??'--';
+  document.getElementById('wHumid').textContent=w.humid??'--';
+  document.getElementById('wWind').textContent=w.wind??'--';
+  document.getElementById('wRain').textContent=w.rain??'--';
+  document.getElementById('bannerCity').textContent=w.city||'--';
+  const ai=airInfo(w.pm10,w.pm25);
+  document.getElementById('aCard').style.background=ai.grad;
+  document.getElementById('aIcon').textContent=ai.icon;
+  document.getElementById('aGrade').textContent=ai.label;
+  document.getElementById('pm10V').textContent=(w.pm10??'--')+' ㎍/㎥';
+  document.getElementById('pm25V').textContent=(w.pm25??'--')+' ㎍/㎥';
+  document.getElementById('ozoneV').textContent=(w.ozone??'--')+' ppm';
+}
+
+function fetchByCity(){const c=document.getElementById('cityInput').value.trim();if(!c){showToast('도시명을 입력해주세요');return;}fetchWeather(c);document.getElementById('cityInput').value='';}
+function refreshWeather(){fetchWeather(weatherData.city||localStorage.getItem('sty_city')||'서울');}
+function saveDefaultCity(){const c=document.getElementById('defaultCityInput').value.trim();if(!c)return;localStorage.setItem('sty_city',c);showToast('✔ 기본 도시가 저장됐습니다');}
+
+// ── 오늘 일정 ──
+function renderTodaySchedule(){
+  const evs=events[todayStr]||[];
+  const el=document.getElementById('todaySched');
+  if(!evs.length){el.innerHTML='<div style="text-align:center;color:var(--muted);padding:10px 0;"><div style="font-size:24px;">📭</div><p style="font-size:12px;">일정 없음</p></div>';return;}
+  el.innerHTML=evs.map(e=>`
+    <div style="display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:5px;flex-shrink:0;"></div>
+      <div>
+        <div style="font-size:13px;font-weight:500;">${e.name}</div>
+        ${e.start?`<div style="font-size:11px;color:var(--muted);">${e.start}${e.end?' ~ '+e.end:''}</div>`:''}
+        <span class="sbadge" style="background:${TPO_BADGE[e.type]||'#4a4a4a'}22;color:${TPO_BADGE[e.type]||'#4a4a4a'};">${TPO_EMOJI[e.type]||'📌'} ${e.type}</span>
+      </div>
+    </div>`).join('');
+}
+
+function refreshToday(){
+  if(profile.name){
+    document.getElementById('pminiWrap').style.display='flex';
+    document.getElementById('pminiName').textContent=profile.name;
+    document.getElementById('pminiSub').textContent=[profile.style,profile.job].filter(Boolean).join(' · ')||'스타일 미설정';
+    const mi=document.getElementById('pminiImg');
+    mi.innerHTML=profile.photo?`<img src="${profile.photo}" style="width:100%;height:100%;object-fit:cover;">`:'👤';
+  }
+  renderWeather();
+  renderTodaySchedule();
+}
+
+// ── AI 코디 ──
+async function getAICody(){
+  if(!getApiKey()){showToast('⚙️ 설정 탭에서 API 키를 먼저 입력해주세요');return;}
+  const btn=document.getElementById('codyBtn');
+  btn.disabled=true;
+  document.getElementById('codyLoading').style.display='block';
+  document.getElementById('codyResult').style.display='none';
+  document.getElementById('codyResult').scrollIntoView({behavior:'smooth',block:'start'});
+  const w=weatherData, ai=airInfo(w.pm10,w.pm25);
+  const todayEvs=events[todayStr]||[];
+  const clothList=clothes.length?clothes.map(c=>`- [${c.cat}]${c.name}(${c.color||''},${c.season||''})`).join('\n'):'(옷장 없음)';
+  const schedText=todayEvs.length?todayEvs.map(e=>`- ${e.name}[${e.type}]${e.start?' '+e.start:''}`).join('\n'):'일정 없음';
+  const profText=[profile.name&&`이름:${profile.name}`,profile.gender&&`성별:${profile.gender}`,profile.age&&`나이:${profile.age}세`,profile.height&&`키:${profile.height}cm`,profile.style&&`선호:${profile.style}`,profile.color&&`색상:${profile.color}`,profile.job&&`직업:${profile.job}`,profile.note&&`메모:${profile.note}`].filter(Boolean).join(', ')||'미입력';
+  const prompt=`패션 스타일리스트로서 아래 정보로 오늘의 코디를 3가지 서로 다른 스타일로 추천해주세요.\n[날씨] 기온:${w.temp??'?'}°C/체감:${w.feels??'?'}°C/${w.cond||'?'}/지역:${w.city||'?'}/습도:${w.humid??'?'}%/강수:${w.rain??'?'}%\n[대기질] PM10:${w.pm10??'?'} PM2.5:${w.pm25??'?'} 등급:${ai.label}\n[일정] ${schedText}\n[착용자] ${profText}\n[옷장] ${clothList}\nJSON 배열만 응답(다른 텍스트 없이):\n[{"style":"스타일명","theme":"무드 한 줄","color":"#hex","desc":"추천이유 2~3문장","items":[{"icon":"이모지","name":"아이템명"},{"icon":"이모지","name":"아이템명"},{"icon":"이모지","name":"아이템명"},{"icon":"이모지","name":"아이템명"}],"tip":"스타일링팁","airAdvice":"나쁨이상일때만 아니면 빈문자"}]\n3가지는 서로 다른 방향으로.`;
+  try{
+    const data=await callClaude({maxTokens:2000,messages:[{role:'user',content:prompt}]});
+    const raw=(data.content||[]).map(b=>b.text||'').join('');
+    const m=raw.match(/\[[\s\S]*\]/);
+    if(!m) throw new Error('파싱 실패');
+    renderOutfits(JSON.parse(m[0]),ai);
+  }catch(e){
+    document.getElementById('codyLoading').innerHTML=`<div style="text-align:center;padding:28px;color:#c05040;">❌ ${e.message}</div>`;
+  }
+  btn.disabled=false;
+}
+
+function renderOutfits(outfits,ai){
+  document.getElementById('codyLoading').style.display='none';
+  document.getElementById('codyResult').style.display='block';
+  const w=weatherData;
+  document.getElementById('codySubtitle').textContent=[w.city,w.temp!=null&&`기온 ${w.temp}°C`,ai.label!=='정보없음'&&`대기질 ${ai.label}`,(events[todayStr]||[]).length&&`일정 ${events[todayStr].length}개`].filter(Boolean).join(' · ');
+  document.getElementById('outfitList').innerHTML=outfits.map((o,i)=>{
+    const ac=o.color||AC[i%3];
+    const items=(o.items||[]).map(it=>{
+      const matched=clothes.find(c=>c.name.replace(/\s/g,'').includes(it.name.replace(/\s/g,''))||it.name.replace(/\s/g,'').includes(c.name.replace(/\s/g,'')));
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;width:82px;">
+        <div style="width:72px;height:90px;border-radius:10px;overflow:hidden;background:var(--bg2);border:2px solid ${matched?ac:'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:28px;position:relative;">
+          ${matched?.img?`<img src="${matched.img}" style="width:100%;height:100%;object-fit:cover;">`:`<span>${it.icon||'👔'}</span>`}
+          ${matched?`<div style="position:absolute;bottom:3px;right:3px;background:${ac};border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;">✓</div>`:''}
+        </div>
+        <div style="font-size:11px;font-weight:500;text-align:center;line-height:1.3;">${it.name}</div>
+      </div>`;
+    }).join('');
+    return `<div class="outfit-card">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);background:${ac}0d;">
+        <div style="width:4px;height:36px;border-radius:2px;background:${ac};flex-shrink:0;"></div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);letter-spacing:1.5px;margin-bottom:2px;">코디 ${['①','②','③'][i]}</div>
+          <div style="font-family:'Noto Serif KR',serif;font-size:17px;font-weight:700;color:${ac};">${o.style}</div>
+        </div>
+        <span style="font-size:12px;padding:4px 12px;border-radius:20px;font-weight:500;background:${ac}22;color:${ac};border:1px solid ${ac}44;margin-left:auto;">✦ ${o.theme}</span>
+      </div>
+      <div class="outfit-body">
+        <div class="outfit-col" style="font-size:13px;color:var(--ink2);line-height:1.85;">${o.desc}</div>
+        <div class="outfit-col">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:500;">구성 아이템</div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;">${items}</div>
+        </div>
+        <div class="outfit-col" style="background:var(--card2);font-size:12px;color:var(--ink2);line-height:1.8;">
+          <div style="font-weight:600;color:${ac};margin-bottom:6px;">💡 스타일링 팁</div>
+          ${o.tip}
+          ${o.airAdvice?`<div style="margin-top:10px;padding:8px 10px;background:rgba(192,80,64,.07);border:1px solid rgba(192,80,64,.18);border-radius:7px;font-size:11px;color:#8a2a1a;line-height:1.7;">😷 ${o.airAdvice}</div>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 옷장 ──
+function renderClothes(filter='전체'){
+  const grid=document.getElementById('clothesGrid');
+  const list=filter==='전체'?clothes:clothes.filter(c=>c.cat===filter);
+  if(!list.length){grid.innerHTML=`<div class="empty" style="grid-column:1/-1;"><div style="font-size:36px;margin-bottom:8px;">👗</div><p>${filter==='전체'?'옷이 없어요':'해당 카테고리 없음'}</p></div>`;return;}
+  grid.innerHTML=list.map(c=>{
+    const idx=clothes.indexOf(c);
+    return `<div class="ccard">
+      <div class="cthumb">${c.img?`<img src="${c.img}">`:`<span>${CAT_EMOJI[c.cat]||'👔'}</span>`}</div>
+      ${c.season?`<div class="cseason">${c.season}</div>`:''}
+      <button class="cdel btn" onclick="delCloth(${idx},event)">✕</button>
+      <div style="padding:8px 10px;">
+        <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${c.cat}${c.color?' · '+c.color:''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function filterC(cat,btn){document.querySelectorAll('.flt').forEach(f=>f.classList.remove('on'));btn.classList.add('on');renderClothes(cat);}
+function openCModal(){clothImgB64=null;['cName','cColor','cTag'].forEach(id=>document.getElementById(id).value='');document.getElementById('cCat').value='상의';document.getElementById('cSeason').value='봄/가을';document.getElementById('clothImgZone').innerHTML='<span style="font-size:32px;">📷</span><span>사진을 클릭하여 업로드</span><span style="font-size:11px;">업로드 후 AI가 자동으로 분류해드립니다</span>';document.getElementById('aiAnalyzeMsg').style.display='none';document.getElementById('clothOverlay').classList.add('on');}
+function closeCModal(){document.getElementById('clothOverlay').classList.remove('on');}
+
+async function handleClothImg(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=async e=>{
+    clothImgB64=e.target.result;
+    document.getElementById('clothImgZone').innerHTML=`<img src="${clothImgB64}" style="width:100%;height:100%;object-fit:cover;">`;
+    if(!getApiKey()){showToast('AI 분류 불가: API 키를 설정해주세요');return;}
+    document.getElementById('aiAnalyzeMsg').style.display='block';
+    try{
+      const b64=clothImgB64.split(',')[1], mt=f.type||'image/jpeg';
+      const data=await callClaude({maxTokens:300,messages:[{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:mt,data:b64}},
+        {type:'text',text:`이 옷 사진을 보고 JSON만 응답:{"name":"색상+옷이름","cat":"상의|하의|아우터|원피스/세트|신발|가방|액세서리 중 하나","color":"주요색상(한국어)","season":"봄/가을|여름|겨울|사계절 중 하나","tag":"스타일태그"}`}
+      ]}]});
+      const raw=(data.content||[]).map(b=>b.text||'').join('');
+      const m=raw.match(/\{[\s\S]*?\}/);
+      if(m){
+        const res=JSON.parse(m[0]);
+        if(res.name) document.getElementById('cName').value=res.name;
+        if(res.cat){const sel=document.getElementById('cCat');for(let o of sel.options)if(o.value===res.cat){sel.value=res.cat;break;}}
+        if(res.color) document.getElementById('cColor').value=res.color;
+        if(res.season){const sel=document.getElementById('cSeason');for(let o of sel.options)if(o.value===res.season){sel.value=res.season;break;}}
+        if(res.tag) document.getElementById('cTag').value=res.tag;
+        showToast('✨ AI가 자동으로 분류했습니다!');
+      }
+    }catch(e){showToast('AI 분류 실패: '+e.message);}
+    document.getElementById('aiAnalyzeMsg').style.display='none';
+  };
+  r.readAsDataURL(f);
+}
+
+function saveCloth(){
+  const name=document.getElementById('cName').value.trim();
+  if(!name){showToast('옷 이름을 입력해주세요');return;}
+  clothes.push({name,cat:document.getElementById('cCat').value,color:document.getElementById('cColor').value,season:document.getElementById('cSeason').value,tag:document.getElementById('cTag').value,img:clothImgB64});
+  localStorage.setItem('sty_c',JSON.stringify(clothes));
+  closeCModal();
+  const a=document.querySelector('.flt.on');
+  renderClothes(a?a.textContent.replace(/[^\w가-힣\/]/g,'').trim():'전체');
+  showToast('✔ 옷이 추가됐습니다');
+}
+function delCloth(idx,e){e.stopPropagation();if(!confirm('삭제할까요?'))return;clothes.splice(idx,1);localStorage.setItem('sty_c',JSON.stringify(clothes));const a=document.querySelector('.flt.on');renderClothes(a?a.textContent.replace(/[^\w가-힣\/]/g,'').trim():'전체');}
+
+// ── 여러 장 추가 ──
+function openMultiModal(){multiItems=[];document.getElementById('multiPreviewGrid').innerHTML='';document.getElementById('multiProgress').style.display='none';document.getElementById('multiSaveBtn').style.display='none';document.getElementById('multiOverlay').classList.add('on');}
+function closeMultiModal(){document.getElementById('multiOverlay').classList.remove('on');}
+
+async function handleMultiFiles(files){
+  if(!files.length)return;
+  const arr=Array.from(files);
+  const prog=document.getElementById('multiProgress');
+  prog.style.display='block';
+  prog.innerHTML='<span class="spin" style="width:14px;height:14px;margin-right:6px;"></span>사진을 읽는 중…';
+  document.getElementById('multiSaveBtn').style.display='none';
+  const b64list=await Promise.all(arr.map(f=>new Promise(res=>{const r=new FileReader();r.onload=e=>res({img:e.target.result,type:f.type||'image/jpeg',file:f});r.readAsDataURL(f);})));
+  prog.innerHTML=`<span class="spin" style="width:14px;height:14px;margin-right:6px;"></span>${arr.length}장 분석 중…`;
+  const grid=document.getElementById('multiPreviewGrid');
+  grid.innerHTML=''; multiItems=[];
+  b64list.forEach((b,i)=>{
+    const card=document.createElement('div');
+    card.id=`mc_${i}`;
+    card.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;';
+    card.innerHTML=`<div style="aspect-ratio:3/4;overflow:hidden;background:var(--bg2);display:flex;align-items:center;justify-content:center;"><img src="${b.img}" style="width:100%;height:100%;object-fit:cover;"></div><div style="padding:8px 9px;font-size:11px;color:var(--muted);">분석 중…</div>`;
+    grid.appendChild(card);
+    multiItems.push({img:b.img,name:'',cat:'상의',color:'',season:'봄/가을',tag:''});
+  });
+  for(let i=0;i<b64list.length;i++){
+    prog.innerHTML=`<span class="spin" style="width:14px;height:14px;margin-right:6px;"></span>${i+1}/${b64list.length} 분석 중…`;
+    try{
+      const data=await callClaude({maxTokens:200,messages:[{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:b64list[i].type,data:b64list[i].img.split(',')[1]}},
+        {type:'text',text:`JSON만 응답:{"name":"색상+옷이름","cat":"상의|하의|아우터|원피스/세트|신발|가방|액세서리 중 하나","color":"주요색상","season":"봄/가을|여름|겨울|사계절 중 하나","tag":"스타일태그"}`}
+      ]}]});
+      const raw=(data.content||[]).map(b=>b.text||'').join('');
+      const m=raw.match(/\{[\s\S]*?\}/);
+      if(m){
+        const res=JSON.parse(m[0]);
+        multiItems[i]={...multiItems[i],...res};
+        const card=document.getElementById(`mc_${i}`);
+        card.querySelector('div:last-child').innerHTML=`<input value="${res.name||''}" oninput="multiItems[${i}].name=this.value" style="width:100%;border:none;background:none;font-size:12px;font-weight:500;padding:0;outline:none;font-family:'Noto Sans KR',sans-serif;"><div style="color:var(--muted);">${res.cat||''} · ${res.color||''}</div>`;
+        card.style.borderColor='var(--gold)';
+      }
+    }catch(e){const card=document.getElementById(`mc_${i}`);card.querySelector('div:last-child').innerHTML=`<input placeholder="이름 직접입력" oninput="multiItems[${i}].name=this.value" style="width:100%;border:none;background:none;font-size:12px;padding:0;outline:none;"><div style="color:var(--muted);">분류 실패</div>`;}
+  }
+  prog.textContent=`✅ ${b64list.length}장 분석 완료!`;
+  document.getElementById('multiSaveBtn').style.display='inline-flex';
+}
+
+function saveAllMulti(){
+  const valid=multiItems.filter(m=>m.img);
+  if(!valid.length){showToast('저장할 항목이 없습니다');return;}
+  valid.forEach(m=>{if(!m.name)m.name=m.cat||'옷';clothes.push(m);});
+  localStorage.setItem('sty_c',JSON.stringify(clothes));
+  closeMultiModal(); renderClothes('전체');
+  document.querySelectorAll('.flt').forEach(f=>f.classList.remove('on'));
+  document.querySelectorAll('.flt')[0]?.classList.add('on');
+  showToast(`✔ ${valid.length}개 옷이 추가됐습니다`);
+}
+
+// ── 가상 착용 ──
+function openFitModal(){
+  fitModelB64=null;fitGarmentB64=null;
+  document.getElementById('fitModelZone').innerHTML='<span style="font-size:28px;">🧍</span><span>전신 사진</span>';
+  document.getElementById('fitGarmentZone').innerHTML='<span style="font-size:28px;">👕</span><span>옷 사진</span>';
+  document.getElementById('fitResultWrap').style.display='none';
+  document.getElementById('fitLoading').style.display='none';
+  document.getElementById('fitError').style.display='none';
+  document.getElementById('fashnKey').value=localStorage.getItem('fashn_key')||'';
+  document.getElementById('fitOverlay').classList.add('on');
+}
+function closeFitModal(){document.getElementById('fitOverlay').classList.remove('on');}
+function loadFitImg(type,input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const src=e.target.result;
+    if(type==='model'){fitModelB64=src;document.getElementById('fitModelZone').innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover;">`;}
+    else{fitGarmentB64=src;document.getElementById('fitGarmentZone').innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover;">`;}
+  };
+  r.readAsDataURL(f);
+}
+async function runFitting(){
+  const apiKey=document.getElementById('fashnKey').value.trim();
+  if(!apiKey){showToast('Fashn.ai API 키를 입력해주세요');return;}
+  if(!fitModelB64){showToast('전신 사진을 업로드해주세요');return;}
+  if(!fitGarmentB64){showToast('옷 사진을 업로드해주세요');return;}
+  document.getElementById('fitLoading').style.display='block';
+  document.getElementById('fitResultWrap').style.display='none';
+  document.getElementById('fitError').style.display='none';
+  try{
+    const runRes=await fetch('https://api.fashn.ai/v1/run',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model_image:fitModelB64,garment_image:fitGarmentB64,category:'tops',mode:'balanced'})});
+    const rd=await runRes.json();
+    if(!rd.id) throw new Error(rd.error||'API 호출 실패');
+    for(let i=0;i<30;i++){
+      await new Promise(r=>setTimeout(r,2000));
+      const s=await fetch(`https://api.fashn.ai/v1/status/${rd.id}`,{headers:{'Authorization':'Bearer '+apiKey}});
+      const sd=await s.json();
+      if(sd.status==='completed'&&sd.output?.length){
+        document.getElementById('fitResultImg').src=sd.output[0];
+        document.getElementById('fitResultWrap').style.display='block';
+        document.getElementById('fitLoading').style.display='none';
+        return;
+      }
+      if(sd.status==='failed') throw new Error('생성 실패: '+sd.error);
+    }
+    throw new Error('시간 초과');
+  }catch(e){
+    document.getElementById('fitLoading').style.display='none';
+    const err=document.getElementById('fitError');
+    err.textContent='❌ '+e.message; err.style.display='block';
+  }
+}
+
+// ── 일정 ──
+function initCal(){if(!calYear){calYear=today.getFullYear();calMonth=today.getMonth();}if(!selDate)selDate=todayStr;renderCal();renderEvList(selDate);document.getElementById('showEvBtn').style.display='block';}
+function renderCal(){
+  document.getElementById('calTitle').textContent=`${calYear}년 ${calMonth+1}월`;
+  const grid=document.getElementById('calGrid');
+  grid.querySelectorAll('.cal-day').forEach(d=>d.remove());
+  const first=new Date(calYear,calMonth,1).getDay(),last=new Date(calYear,calMonth+1,0).getDate(),prevLast=new Date(calYear,calMonth,0).getDate();
+  for(let i=0;i<first;i++){const d=document.createElement('div');d.className='cal-day other-m';d.textContent=prevLast-first+1+i;grid.appendChild(d);}
+  for(let d=1;d<=last;d++){
+    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const el=document.createElement('div');el.className='cal-day';el.textContent=d;
+    if(ds===todayStr)el.classList.add('today');
+    if(ds===selDate)el.classList.add('selected');
+    if((events[ds]||[]).length)el.classList.add('has-ev');
+    el.onclick=()=>selectDate(ds);
+    grid.appendChild(el);
+  }
+  const rem=(first+last)%7===0?0:7-(first+last)%7;
+  for(let i=1;i<=rem;i++){const d=document.createElement('div');d.className='cal-day other-m';d.textContent=i;grid.appendChild(d);}
+}
+function moveMonth(dir){calMonth+=dir;if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;}renderCal();}
+function selectDate(ds){selDate=ds;renderCal();renderEvList(ds);document.getElementById('addEvForm').style.display='none';document.getElementById('showEvBtn').style.display='block';}
+function renderEvList(ds){
+  if(!ds){document.getElementById('evDateTitle').textContent='날짜를 선택하세요';return;}
+  const evs=events[ds]||[];
+  const dt=new Date(ds+'T00:00:00');
+  document.getElementById('evDateTitle').textContent=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일`;
+  const el=document.getElementById('evList');
+  if(!evs.length){el.innerHTML='<div class="empty" style="padding:10px 0;"><div style="font-size:24px;">📭</div><p style="font-size:12px;">일정 없음</p></div>';return;}
+  el.innerHTML=evs.map((e,i)=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:var(--bg2);margin-bottom:6px;">
+      <span style="font-size:16px;">${TPO_EMOJI[e.type]||'📌'}</span>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:500;">${e.name}</div><div style="font-size:11px;color:var(--muted);">${e.type}${e.start?' · '+e.start+(e.end?' ~ '+e.end:''):''}</div></div>
+      <button onclick="delEvent('${ds}',${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:3px;">✕</button>
+    </div>`).join('');
+  document.getElementById('showEvBtn').style.display='block';
+}
+function showEvFormFn(){document.getElementById('addEvForm').style.display='block';document.getElementById('showEvBtn').style.display='none';document.getElementById('evName').focus();}
+function cancelEv(){document.getElementById('addEvForm').style.display='none';document.getElementById('showEvBtn').style.display='block';}
+function saveEvent(){
+  const name=document.getElementById('evName').value.trim();
+  if(!name){showToast('일정 이름을 입력해주세요');return;}
+  if(!events[selDate])events[selDate]=[];
+  events[selDate].push({name,type:document.getElementById('evType').value,start:document.getElementById('evStart').value,end:document.getElementById('evEnd').value});
+  localStorage.setItem('sty_e',JSON.stringify(events));
+  ['evName','evStart','evEnd'].forEach(id=>document.getElementById(id).value='');
+  renderEvList(selDate);renderCal();cancelEv();showToast('✔ 일정이 저장됐습니다');
+}
+function delEvent(ds,idx){if(!confirm('삭제할까요?'))return;events[ds].splice(idx,1);if(!events[ds].length)delete events[ds];localStorage.setItem('sty_e',JSON.stringify(events));renderEvList(ds);renderCal();}
+
+// ── 프로필 ──
+function loadProfileForm(){
+  ['Name','Gender','Age','Height','Weight','Style','Color','Job','Note'].forEach(f=>{const el=document.getElementById('p'+f);if(el)el.value=profile[f.toLowerCase()]||'';});
+  if(profile.photo){document.getElementById('profileImg').src=profile.photo;document.getElementById('profileImg').style.display='block';document.getElementById('photoHint').style.display='none';}
+}
+function saveProfile(){
+  profile={name:document.getElementById('pName').value,gender:document.getElementById('pGender').value,age:document.getElementById('pAge').value,height:document.getElementById('pHeight').value,weight:document.getElementById('pWeight').value,style:document.getElementById('pStyle').value,color:document.getElementById('pColor').value,job:document.getElementById('pJob').value,note:document.getElementById('pNote').value,photo:profile.photo||''};
+  localStorage.setItem('sty_p',JSON.stringify(profile));
+}
+function loadPhoto(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{profile.photo=e.target.result;localStorage.setItem('sty_p',JSON.stringify(profile));document.getElementById('profileImg').src=e.target.result;document.getElementById('profileImg').style.display='block';document.getElementById('photoHint').style.display='none';};r.readAsDataURL(f);}
+
+// ── 데이터 초기화 ──
+function clearClothes(){if(!confirm('옷장을 초기화할까요?'))return;clothes=[];localStorage.removeItem('sty_c');renderClothes();showToast('옷장이 초기화됐습니다');}
+function clearEvents(){if(!confirm('일정을 초기화할까요?'))return;events={};localStorage.removeItem('sty_e');showToast('일정이 초기화됐습니다');}
+function clearAll(){if(!confirm('모든 데이터를 초기화할까요?'))return;['sty_c','sty_e','sty_p','sty_city','sty_apikey'].forEach(k=>localStorage.removeItem(k));location.reload();}
+
+// ── 오버레이 클릭 닫기 ──
+window.onclick=e=>{
+  if(e.target===document.getElementById('clothOverlay'))closeCModal();
+  if(e.target===document.getElementById('multiOverlay'))closeMultiModal();
+  if(e.target===document.getElementById('fitOverlay'))closeFitModal();
+};
+document.getElementById('cityInput').addEventListener('keydown',e=>{if(e.key==='Enter')fetchByCity();});
+
+// ── 초기화 ──
+renderClothes();
+loadProfileForm();
+updateApiStatus();
+initCal();
+selDate=todayStr;
+renderEvList(todayStr);
+
+// 날씨 자동 조회 (API 키 있을 때만)
+if(getApiKey()){
+  const savedCity=localStorage.getItem('sty_city')||'서울';
+  fetchWeather(savedCity);
+} else {
+  document.getElementById('bannerStatus').textContent='⚠️ 설정 탭에서 API 키를 입력하면 날씨가 자동 조회됩니다';
+}
+refreshToday();
+</script>
+</body>
+</html>
